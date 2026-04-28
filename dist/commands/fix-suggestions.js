@@ -19,6 +19,7 @@ export async function fixSuggestionsCommand(args) {
     // Rule source errors block fix suggestions
     if (hasErrors(exceptions)) {
         const output = {
+            schemaVersion: '1.0',
             command: 'fix-suggestions',
             app: ctx.appName,
             target: ctx.targetFile,
@@ -42,6 +43,7 @@ export async function fixSuggestionsCommand(args) {
     const suggestions = violations.map((v) => generateSuggestion(v, args));
     // 7. Build output
     const output = {
+        schemaVersion: '1.0',
         command: 'fix-suggestions',
         app: ctx.appName,
         target: ctx.targetFile,

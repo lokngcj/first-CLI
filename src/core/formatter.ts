@@ -455,17 +455,27 @@ function formatQualityText(quality: QualityResult): string {
   const tcIcon = quality.typecheck.success ? '✓' : '✗';
   const testIcon = quality.test.success ? '✓' : '✗';
 
+  lines.push(`  Package Manager: ${quality.packageManager}`);
   lines.push(`  ${lintIcon} Lint:      ${quality.lint.success ? 'Passed' : 'Failed'}`);
+  lines.push(`    Command: ${quality.lint.command}`);
   if (!quality.lint.success && quality.lint.error) {
     lines.push(`    → ${quality.lint.error.slice(0, 200)}`);
   }
   lines.push(`  ${tcIcon} TypeCheck:  ${quality.typecheck.success ? 'Passed' : 'Failed'}`);
+  lines.push(`    Command: ${quality.typecheck.command}`);
   if (!quality.typecheck.success && quality.typecheck.error) {
     lines.push(`    → ${quality.typecheck.error.slice(0, 200)}`);
   }
   lines.push(`  ${testIcon} Tests:     ${quality.test.success ? 'Passed' : 'Failed'}`);
+  lines.push(`    Command: ${quality.test.command}`);
   if (!quality.test.success && quality.test.error) {
     lines.push(`    → ${quality.test.error.slice(0, 200)}`);
+  }
+  if (quality.apps && quality.apps.length > 1) {
+    lines.push('  Apps:');
+    for (const app of quality.apps) {
+      lines.push(`    - ${app.appName}: lint=${app.lint.success ? 'Passed' : 'Failed'}, typecheck=${app.typecheck.success ? 'Passed' : 'Failed'}, test=${app.test.success ? 'Passed' : 'Failed'}`);
+    }
   }
   return lines.join('\n');
 }
@@ -493,11 +503,27 @@ function formatViolationsMarkdown(violations: RulesViolation[]): string {
 
 function formatQualityMarkdown(quality: QualityResult): string {
   const lines: string[] = [];
+  lines.push(`Package manager: \`${quality.packageManager}\``);
+  lines.push('');
   lines.push(`| Check | Status |`);
   lines.push(`|-------|--------|`);
   lines.push(`| Lint | ${quality.lint.success ? '✅ Passed' : '❌ Failed'} |`);
   lines.push(`| TypeCheck | ${quality.typecheck.success ? '✅ Passed' : '❌ Failed'} |`);
   lines.push(`| Tests | ${quality.test.success ? '✅ Passed' : '❌ Failed'} |`);
+  lines.push('');
+  lines.push('| Check | Command |');
+  lines.push('|-------|---------|');
+  lines.push(`| Lint | \`${quality.lint.command}\` |`);
+  lines.push(`| TypeCheck | \`${quality.typecheck.command}\` |`);
+  lines.push(`| Tests | \`${quality.test.command}\` |`);
+  if (quality.apps && quality.apps.length > 1) {
+    lines.push('');
+    lines.push('| App | Lint | TypeCheck | Tests |');
+    lines.push('|-----|------|-----------|-------|');
+    for (const app of quality.apps) {
+      lines.push(`| ${app.appName} | ${app.lint.success ? 'Passed' : 'Failed'} | ${app.typecheck.success ? 'Passed' : 'Failed'} | ${app.test.success ? 'Passed' : 'Failed'} |`);
+    }
+  }
   return lines.join('\n');
 }
 

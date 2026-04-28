@@ -84,15 +84,39 @@ export interface FixSuggestion {
   checklistItem?: string;
 }
 
-/** Result from running quality checks */
+export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+/** Result from one quality check command */
+export interface QualityStepResult {
+  success: boolean;
+  command: string;
+  cwd: string;
+  output: string;
+  error?: string;
+}
+
+/** Result from running quality checks for a single app */
+export interface AppQualityResult {
+  appName: string;
+  appPath: string;
+  packageManager: PackageManager;
+  lint: QualityStepResult;
+  typecheck: QualityStepResult;
+  test: QualityStepResult;
+}
+
+/** Aggregated result from running quality checks */
 export interface QualityResult {
-  lint: { success: boolean; output: string; error?: string };
-  typecheck: { success: boolean; output: string; error?: string };
-  test: { success: boolean; output: string; error?: string };
+  packageManager: PackageManager | 'mixed';
+  lint: QualityStepResult;
+  typecheck: QualityStepResult;
+  test: QualityStepResult;
+  apps?: AppQualityResult[];
 }
 
 /** Output from the preflight command */
 export interface PreflightOutput {
+  schemaVersion: '1.0';
   command: 'preflight';
   app: string;
   target: string;
@@ -105,6 +129,7 @@ export interface PreflightOutput {
 
 /** Output from the verify command */
 export interface VerifyOutput {
+  schemaVersion: '1.0';
   command: 'verify';
   app: string;
   target: string;
@@ -123,6 +148,7 @@ export interface VerifyOutput {
 
 /** Output from the fix-suggestions command */
 export interface FixSuggestionsOutput {
+  schemaVersion: '1.0';
   command: 'fix-suggestions';
   app: string;
   target: string;
@@ -140,6 +166,7 @@ export interface AppHealth {
 
 /** Output from the rules-check command */
 export interface RulesCheckOutput {
+  schemaVersion: '1.0';
   command: 'rules-check';
   projectRoot: string;
   appCount: number;
@@ -152,6 +179,7 @@ export interface RulesCheckOutput {
 
 /** Output from the figma-compress command */
 export interface FigmaCompressOutput {
+  schemaVersion: '1.0';
   command: 'figma-compress';
   input: string;
   output: string;

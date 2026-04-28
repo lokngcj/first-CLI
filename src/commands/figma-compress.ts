@@ -47,6 +47,7 @@ export async function figmaCompressCommand(args: FigmaCompressArgs): Promise<voi
 
   if (inputSize <= COMPRESS_THRESHOLD_BYTES) {
     const outputData: FigmaCompressOutput = {
+      schemaVersion: '1.0',
       command: 'figma-compress',
       input: inputPath,
       output: outputPath,
@@ -80,6 +81,7 @@ export async function figmaCompressCommand(args: FigmaCompressArgs): Promise<voi
   }
 
   const outputData: FigmaCompressOutput = {
+    schemaVersion: '1.0',
     command: 'figma-compress',
     input: inputPath,
     output: outputPath,

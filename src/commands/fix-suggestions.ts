@@ -39,6 +39,7 @@ export async function fixSuggestionsCommand(args: FixSuggestionsArgs): Promise<v
   // Rule source errors block fix suggestions
   if (hasErrors(exceptions)) {
     const output: FixSuggestionsOutput = {
+      schemaVersion: '1.0',
       command: 'fix-suggestions',
       app: ctx.appName,
       target: ctx.targetFile!,
@@ -64,6 +65,7 @@ export async function fixSuggestionsCommand(args: FixSuggestionsArgs): Promise<v
 
   // 7. Build output
   const output: FixSuggestionsOutput = {
+    schemaVersion: '1.0',
     command: 'fix-suggestions',
     app: ctx.appName,
     target: ctx.targetFile!,

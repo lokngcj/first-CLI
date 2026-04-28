@@ -29,6 +29,7 @@ export async function figmaCompressCommand(args) {
     const inputSize = getFileSize(inputPath);
     if (inputSize <= COMPRESS_THRESHOLD_BYTES) {
         const outputData = {
+            schemaVersion: '1.0',
             command: 'figma-compress',
             input: inputPath,
             output: outputPath,
@@ -56,6 +57,7 @@ export async function figmaCompressCommand(args) {
         reason = 'Image appears already highly compressed; kept original bytes at output path.';
     }
     const outputData = {
+        schemaVersion: '1.0',
         command: 'figma-compress',
         input: inputPath,
         output: outputPath,

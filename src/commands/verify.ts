@@ -3,15 +3,15 @@
 // quality checks (lint / typecheck / test)
 // ============================================================
 
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { validateProject, resolveApp } from '../core/project-resolver.js';
 import { loadRuleSet } from '../core/rules-loader.js';
 import { validateRuleSources, hasErrors } from '../core/rules-validator.js';
 import { checkFileViolations } from '../core/code-checker.js';
-import { runQualityChecks } from '../core/quality-runner.js';
+import { aggregateQualityResults, runQualityChecks } from '../core/quality-runner.js';
 import { formatOutput } from '../core/formatter.js';
 import { getStagedFiles } from '../utils/git.js';
-import type { OutputFormat, VerifyOutput, RulesViolation } from '../types/index.js';
+import type { AppQualityResult, OutputFormat, QualityResult, VerifyOutput } from '../types/index.js';
 
 export interface VerifyArgs {
   project: string;
@@ -33,6 +33,7 @@ export async function verifyCommand(args: VerifyArgs): Promise<void> {
     const stagedFiles = await getStagedFiles(projectRoot);
     if (stagedFiles.length === 0) {
       const output: VerifyOutput = {
+        schemaVersion: '1.0',
         command: 'verify',
         app: '',
         target: '<staged files>',
@@ -62,12 +63,10 @@ export async function verifyCommand(args: VerifyArgs): Promise<void> {
   // 3. Process each app
   const allExceptions: VerifyOutput['exceptions'] = [];
   const allViolations: VerifyOutput['violations'] = [];
+  const qualityResults: AppQualityResult[] = [];
   let codeCheckSkipped = false;
-  let qualityResult = undefined;
+  let qualityResult: QualityResult | undefined;
   let targetDisplay = args.target || '<staged files>';
-
-  // For quality checks, only run once (on the first app's context)
-  let qualityRun = false;
 
   for (const [appName, { appPath, files }] of filesByApp) {
     // Load rules
@@ -89,17 +88,19 @@ export async function verifyCommand(args: VerifyArgs): Promise<void> {
       allViolations.push(...violations);
     }
 
-    // Run quality checks once (on first app)
-    if (args.quality && !qualityRun) {
-      qualityRun = true;
-      console.error('Running quality checks (lint -> typecheck -> test)...');
+    // Run quality checks per app so staged changes across apps are represented accurately.
+    if (args.quality) {
+      console.error(`Running quality checks for ${appName} (lint -> typecheck -> test)...`);
       console.error('This may take a while depending on project size.\n');
-      qualityResult = runQualityChecks(appPath);
+      qualityResults.push(runQualityChecks(appPath, projectRoot, appName));
     }
   }
 
+  qualityResult = aggregateQualityResults(qualityResults);
+
   // 4. Build output
   const output: VerifyOutput = {
+    schemaVersion: '1.0',
     command: 'verify',
     app: [...filesByApp.keys()].join(', '),
     target: targetDisplay,

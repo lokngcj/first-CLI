@@ -5,7 +5,7 @@ import { validateProject, resolveAppLax } from '../core/project-resolver.js';
 import { loadRuleSet } from '../core/rules-loader.js';
 import { validateRuleSources } from '../core/rules-validator.js';
 import { formatOutput } from '../core/formatter.js';
-import { QUALITY_COMMANDS } from '../utils/constants.js';
+import { detectPackageManager, resolveQualityCommand } from '../core/quality-runner.js';
 export async function preflightCommand(args) {
     // 1. Validate project
     const projectRoot = validateProject(args.project);
@@ -15,18 +15,21 @@ export async function preflightCommand(args) {
     const ruleSet = loadRuleSet(ctx.appPath, ctx.appName);
     // 4. Validate rule sources (warnings only — don't block preflight)
     const exceptions = validateRuleSources(ruleSet);
+    const packageManager = detectPackageManager(projectRoot, ctx.appPath);
+    const qualityCommands = [
+        resolveQualityCommand('lint', packageManager, ctx.appPath, projectRoot).command,
+        resolveQualityCommand('typecheck', packageManager, ctx.appPath, projectRoot).command,
+        resolveQualityCommand('test', packageManager, ctx.appPath, projectRoot).command,
+    ];
     // 5. Build output
     const output = {
+        schemaVersion: '1.0',
         command: 'preflight',
         app: ctx.appName,
         target: ctx.targetFile,
         styleSystem: ruleSet.styleSystem,
         ruleSources: ruleSet.sources.map(formatSource),
-        qualityCommands: [
-            `npx eslint ${ctx.targetFile}`,
-            QUALITY_COMMANDS.typecheck,
-            QUALITY_COMMANDS.test,
-        ],
+        qualityCommands,
         ruleSignals: ruleSet.directives,
         exceptions,
     };

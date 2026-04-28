@@ -35,6 +35,7 @@ export async function rulesCheckCommand(args) {
     const totalExceptions = apps.reduce((sum, a) => sum + a.exceptions.length, 0);
     const appsWithIssues = apps.filter((a) => a.exceptions.length > 0).length;
     const output = {
+        schemaVersion: '1.0',
         command: 'rules-check',
         projectRoot,
         appCount: apps.length,

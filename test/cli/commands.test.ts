@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -82,8 +82,55 @@ describe('CLI commands', () => {
     const json = expectJson(result.stdout);
     expect(result.status).toBe(1);
     expect(json.target).toBe('<staged files>');
+    expect(json.schemaVersion).toBe('1.0');
     expect(json.app).toBe('web');
     expect(json.summary.violations).toBe(8);
+  });
+
+  it('runs staged quality checks for each touched app', () => {
+    repo = createTestMonorepo();
+    const shopPath = join(repo.root, 'apps', 'shop');
+    mkdirSync(join(shopPath, 'src'), { recursive: true });
+    writeFileSync(
+      join(shopPath, 'PROJECT_GUIDE.md'),
+      '# Shop Guide\n- must: use Tailwind for styling\n',
+      'utf8',
+    );
+    writeFileSync(join(shopPath, 'README.md'), 'tailwindcss\n', 'utf8');
+    writeFileSync(join(shopPath, 'src', 'index.ts'), 'export const ok = 1;\n', 'utf8');
+    writeQualityPackage(join(repo.root, 'apps', 'web'), 'web');
+    writeQualityPackage(shopPath, 'shop');
+    initGitWithStagedFiles(repo.root, [
+      'apps/web/PROJECT_GUIDE.md',
+      'apps/web/README.md',
+      'apps/web/src/Demo.tsx',
+      'apps/shop/PROJECT_GUIDE.md',
+      'apps/shop/README.md',
+      'apps/shop/src/index.ts',
+    ]);
+
+    const result = runCli([
+      'verify',
+      '--project',
+      repo.root,
+      '--staged',
+      '--quality',
+      '--format',
+      'json',
+    ]);
+
+    const json = expectJson(result.stdout);
+    expect(result.status).toBe(1);
+    expect(json.app.split(', ').sort()).toEqual(['shop', 'web']);
+    expect(json.quality.apps).toHaveLength(2);
+    expect(json.quality.apps.map((app: { appName: string }) => app.appName).sort()).toEqual([
+      'shop',
+      'web',
+    ]);
+    expect(json.quality.lint.command).toBe('<multiple apps>');
+    expect(json.summary.lintPassed).toBe(true);
+    expect(result.stderr).toContain('Running quality checks for web');
+    expect(result.stderr).toContain('Running quality checks for shop');
   });
 
   it('fix-suggestions keeps json stdout parseable when rule sources are invalid', () => {
@@ -164,4 +211,18 @@ function runCli(args: string[]): CliResult {
 function expectJson(stdout: string): any {
   expect(stdout).not.toBe('');
   return JSON.parse(stdout);
+}
+
+function writeQualityPackage(appPath: string, label: string): void {
+  writeFileSync(
+    join(appPath, 'package.json'),
+    JSON.stringify({
+      scripts: {
+        lint: `node -e "console.log('${label} lint')"`,
+        typecheck: `node -e "console.log('${label} typecheck')"`,
+        test: `node -e "console.log('${label} test')"`,
+      },
+    }),
+    'utf8',
+  );
 }

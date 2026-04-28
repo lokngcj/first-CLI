@@ -51,6 +51,7 @@ export async function rulesCheckCommand(args: RulesCheckArgs): Promise<void> {
   const appsWithIssues = apps.filter((a) => a.exceptions.length > 0).length;
 
   const output: RulesCheckOutput = {
+    schemaVersion: '1.0',
     command: 'rules-check',
     projectRoot,
     appCount: apps.length,
