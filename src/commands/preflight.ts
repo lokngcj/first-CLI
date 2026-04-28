@@ -8,6 +8,7 @@ import { validateRuleSources } from '../core/rules-validator.js';
 import { formatOutput } from '../core/formatter.js';
 import type { OutputFormat, PreflightOutput, RuleSource } from '../types/index.js';
 import { detectPackageManager, resolveQualityCommand } from '../core/quality-runner.js';
+import { EXIT_CODES } from '../utils/errors.js';
 
 export interface PreflightArgs {
   project: string;
@@ -52,7 +53,7 @@ export async function preflightCommand(args: PreflightArgs): Promise<void> {
 
   // Exit with error code if rule source errors exist
   if (exceptions.some((e) => e.severity === 'error')) {
-    process.exitCode = 1;
+    process.exitCode = EXIT_CODES.ruleSource;
   }
 }
 

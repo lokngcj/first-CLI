@@ -11,6 +11,7 @@ import { checkFileViolations } from '../core/code-checker.js';
 import { aggregateQualityResults, runQualityChecks } from '../core/quality-runner.js';
 import { formatOutput } from '../core/formatter.js';
 import { getStagedFiles } from '../utils/git.js';
+import { EXIT_CODES } from '../utils/errors.js';
 import type { AppQualityResult, OutputFormat, QualityResult, VerifyOutput } from '../types/index.js';
 
 export interface VerifyArgs {
@@ -122,11 +123,16 @@ export async function verifyCommand(args: VerifyArgs): Promise<void> {
 
   // Exit code based on results
   if (
-    allExceptions.some((e) => e.severity === 'error') ||
-    allViolations.some((v) => v.severity === 'error') ||
-    (qualityResult && (!qualityResult.lint.success || !qualityResult.typecheck.success || !qualityResult.test.success))
+    allExceptions.some((e) => e.severity === 'error')
   ) {
-    process.exitCode = 1;
+    process.exitCode = EXIT_CODES.ruleSource;
+  } else if (allViolations.some((v) => v.severity === 'error')) {
+    process.exitCode = EXIT_CODES.codeViolation;
+  } else if (
+    qualityResult &&
+    (!qualityResult.lint.success || !qualityResult.typecheck.success || !qualityResult.test.success)
+  ) {
+    process.exitCode = EXIT_CODES.quality;
   }
 }
 

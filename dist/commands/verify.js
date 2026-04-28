@@ -10,6 +10,7 @@ import { checkFileViolations } from '../core/code-checker.js';
 import { aggregateQualityResults, runQualityChecks } from '../core/quality-runner.js';
 import { formatOutput } from '../core/formatter.js';
 import { getStagedFiles } from '../utils/git.js';
+import { EXIT_CODES } from '../utils/errors.js';
 export async function verifyCommand(args) {
     // 1. Validate project
     const projectRoot = validateProject(args.project);
@@ -100,10 +101,15 @@ export async function verifyCommand(args) {
     // 5. Output
     console.log(formatOutput(output, args.format));
     // Exit code based on results
-    if (allExceptions.some((e) => e.severity === 'error') ||
-        allViolations.some((v) => v.severity === 'error') ||
-        (qualityResult && (!qualityResult.lint.success || !qualityResult.typecheck.success || !qualityResult.test.success))) {
-        process.exitCode = 1;
+    if (allExceptions.some((e) => e.severity === 'error')) {
+        process.exitCode = EXIT_CODES.ruleSource;
+    }
+    else if (allViolations.some((v) => v.severity === 'error')) {
+        process.exitCode = EXIT_CODES.codeViolation;
+    }
+    else if (qualityResult &&
+        (!qualityResult.lint.success || !qualityResult.typecheck.success || !qualityResult.test.success)) {
+        process.exitCode = EXIT_CODES.quality;
     }
 }
 /**

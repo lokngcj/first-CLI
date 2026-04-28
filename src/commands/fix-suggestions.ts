@@ -8,6 +8,7 @@ import { loadRuleSet } from '../core/rules-loader.js';
 import { validateRuleSources, hasErrors } from '../core/rules-validator.js';
 import { checkFileViolations } from '../core/code-checker.js';
 import { formatOutput } from '../core/formatter.js';
+import { EXIT_CODES } from '../utils/errors.js';
 import type {
   OutputFormat,
   FixSuggestionsOutput,
@@ -53,7 +54,7 @@ export async function fixSuggestionsCommand(args: FixSuggestionsArgs): Promise<v
     } else {
       console.log(`\n${message}`);
     }
-    process.exitCode = 1;
+    process.exitCode = EXIT_CODES.ruleSource;
     return;
   }
 
@@ -77,7 +78,7 @@ export async function fixSuggestionsCommand(args: FixSuggestionsArgs): Promise<v
   console.log(formatOutput(output, args.format));
 
   if (violations.length > 0) {
-    process.exitCode = 1;
+    process.exitCode = EXIT_CODES.codeViolation;
   }
 }
 

@@ -8,6 +8,7 @@ import { loadRuleSet } from '../core/rules-loader.js';
 import { validateRuleSources } from '../core/rules-validator.js';
 import { formatOutput } from '../core/formatter.js';
 import { isDirectory } from '../utils/fs.js';
+import { EXIT_CODES } from '../utils/errors.js';
 import type { OutputFormat, RulesCheckOutput, AppHealth } from '../types/index.js';
 
 export interface RulesCheckArgs {
@@ -66,6 +67,6 @@ export async function rulesCheckCommand(args: RulesCheckArgs): Promise<void> {
   console.log(formatOutput(output, args.format));
 
   if (totalExceptions > 0) {
-    process.exitCode = 1;
+    process.exitCode = EXIT_CODES.ruleSource;
   }
 }

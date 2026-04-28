@@ -10,6 +10,7 @@ import { fixSuggestionsCommand } from './commands/fix-suggestions.js';
 import { rulesCheckCommand } from './commands/rules-check.js';
 import { figmaCompressCommand } from './commands/figma-compress.js';
 import type { OutputFormat } from './types/index.js';
+import { EXIT_CODES, getExitCode, usageError } from './utils/errors.js';
 
 const program = new Command();
 
@@ -40,7 +41,7 @@ program
       });
     } catch (err: any) {
       console.error(`\nError: ${err.message}`);
-      process.exit(1);
+      process.exit(getExitCode(err));
     }
   });
 
@@ -59,11 +60,11 @@ program
     // Validate mutually exclusive + one required
     if (!options.target && !options.staged) {
       console.error('Error: Either --target or --staged must be specified.');
-      process.exit(1);
+      process.exit(EXIT_CODES.usage);
     }
     if (options.target && options.staged) {
       console.error('Error: --target and --staged are mutually exclusive. Specify one.');
-      process.exit(1);
+      process.exit(EXIT_CODES.usage);
     }
 
     try {
@@ -76,7 +77,7 @@ program
       });
     } catch (err: any) {
       console.error(`\nError: ${err.message}`);
-      process.exit(1);
+      process.exit(getExitCode(err));
     }
   });
 
@@ -102,7 +103,7 @@ program
       });
     } catch (err: any) {
       console.error(`\nError: ${err.message}`);
-      process.exit(1);
+      process.exit(getExitCode(err));
     }
   });
 
@@ -122,7 +123,7 @@ program
       });
     } catch (err: any) {
       console.error(`\nError: ${err.message}`);
-      process.exit(1);
+      process.exit(getExitCode(err));
     }
   });
 
@@ -145,7 +146,7 @@ program
       });
     } catch (err: any) {
       console.error(`\nError: ${err.message}`);
-      process.exit(1);
+      process.exit(getExitCode(err));
     }
   });
 
@@ -168,5 +169,5 @@ function parseFormat(value: string): OutputFormat {
   if (normalized === 'text' || normalized === 'markdown' || normalized === 'json') {
     return normalized;
   }
-  throw new Error(`Invalid format: ${value}. Supported formats: text, markdown, json`);
+  throw usageError(`Invalid format: ${value}. Supported formats: text, markdown, json`);
 }

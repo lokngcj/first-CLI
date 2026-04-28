@@ -8,6 +8,7 @@ import { validateProject } from '../core/project-resolver.js';
 import { fileExists, getFileSize, ensureDir, getFileExtension } from '../utils/fs.js';
 import { SUPPORTED_IMAGE_FORMATS, COMPRESS_THRESHOLD_BYTES } from '../utils/constants.js';
 import { formatOutput } from '../core/formatter.js';
+import { imageError } from '../utils/errors.js';
 export async function figmaCompressCommand(args) {
     // 1. Validate project and resolve paths
     const projectRoot = validateProject(args.project);
@@ -15,14 +16,14 @@ export async function figmaCompressCommand(args) {
     const outputPath = resolveFromProject(projectRoot, args.output);
     // 2. Validate input exists
     if (!fileExists(inputPath)) {
-        throw new Error(`Input file does not exist: ${inputPath}\n` +
+        throw imageError(`Input file does not exist: ${inputPath}\n` +
             `Provide a valid path to a Figma-exported bitmap file (png, jpg, jpeg, webp).`);
     }
     // 3. Validate format
     const ext = getFileExtension(inputPath);
     const supported = SUPPORTED_IMAGE_FORMATS;
     if (!supported.includes(ext)) {
-        throw new Error(`Unsupported file format: .${ext}\n` +
+        throw imageError(`Unsupported file format: .${ext}\n` +
             `Supported formats: ${supported.join(', ')}`);
     }
     // 4. Check file size

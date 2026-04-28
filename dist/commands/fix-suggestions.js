@@ -7,6 +7,7 @@ import { loadRuleSet } from '../core/rules-loader.js';
 import { validateRuleSources, hasErrors } from '../core/rules-validator.js';
 import { checkFileViolations } from '../core/code-checker.js';
 import { formatOutput } from '../core/formatter.js';
+import { EXIT_CODES } from '../utils/errors.js';
 export async function fixSuggestionsCommand(args) {
     // 1. Validate project
     const projectRoot = validateProject(args.project);
@@ -34,7 +35,7 @@ export async function fixSuggestionsCommand(args) {
         else {
             console.log(`\n${message}`);
         }
-        process.exitCode = 1;
+        process.exitCode = EXIT_CODES.ruleSource;
         return;
     }
     // 5. Check violations
@@ -53,7 +54,7 @@ export async function fixSuggestionsCommand(args) {
     // 8. Output
     console.log(formatOutput(output, args.format));
     if (violations.length > 0) {
-        process.exitCode = 1;
+        process.exitCode = EXIT_CODES.codeViolation;
     }
 }
 /**

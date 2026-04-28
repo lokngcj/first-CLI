@@ -7,6 +7,7 @@ import {
   initGitWithStagedFiles,
   type TestMonorepo,
 } from '../helpers/fixtures.js';
+import { EXIT_CODES } from '../../src/utils/errors.js';
 
 interface CliResult {
   status: number;
@@ -57,7 +58,7 @@ describe('CLI commands', () => {
     ]);
 
     const json = expectJson(result.stdout);
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(EXIT_CODES.codeViolation);
     expect(json.summary.violations).toBe(8);
     expect(json.violations.map((v: { type: string }) => v.type)).toContain('nonstandard_api_call');
   });
@@ -80,7 +81,7 @@ describe('CLI commands', () => {
     ]);
 
     const json = expectJson(result.stdout);
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(EXIT_CODES.codeViolation);
     expect(json.target).toBe('<staged files>');
     expect(json.schemaVersion).toBe('1.0');
     expect(json.app).toBe('web');
@@ -120,7 +121,7 @@ describe('CLI commands', () => {
     ]);
 
     const json = expectJson(result.stdout);
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(EXIT_CODES.codeViolation);
     expect(json.app.split(', ').sort()).toEqual(['shop', 'web']);
     expect(json.quality.apps).toHaveLength(2);
     expect(json.quality.apps.map((app: { appName: string }) => app.appName).sort()).toEqual([
@@ -147,7 +148,7 @@ describe('CLI commands', () => {
     ]);
 
     const json = expectJson(result.stdout);
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(EXIT_CODES.ruleSource);
     expect(json.command).toBe('fix-suggestions');
     expect(json.exceptions).toHaveLength(3);
     expect(result.stderr).toContain('Fix rule source errors before generating code suggestions.');
@@ -159,7 +160,7 @@ describe('CLI commands', () => {
     const result = runCli(['rules-check', '--project', repo.root, '--format', 'json']);
 
     const json = expectJson(result.stdout);
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(EXIT_CODES.ruleSource);
     expect(json.appCount).toBe(2);
     expect(json.summary.totalExceptions).toBe(3);
   });
@@ -176,7 +177,7 @@ describe('CLI commands', () => {
       '--output',
       join(repo.root, 'out.png'),
     ]);
-    expect(invalidProject.status).toBe(1);
+    expect(invalidProject.status).toBe(EXIT_CODES.project);
     expect(invalidProject.stderr).toContain('Project path does not exist');
 
     const validSmallImage = runCli([
@@ -191,6 +192,22 @@ describe('CLI commands', () => {
     expect(validSmallImage.status).toBe(0);
     expect(validSmallImage.stdout).toContain('Skipped');
     expect(existsSync(join(repo.root, 'compressed', 'small.png'))).toBe(false);
+  });
+
+  it('uses a stable usage exit code for invalid command options', () => {
+    repo = createTestMonorepo();
+
+    const result = runCli([
+      'verify',
+      '--project',
+      repo.root,
+      '--target',
+      'apps/web/src/Demo.tsx',
+      '--staged',
+    ]);
+
+    expect(result.status).toBe(EXIT_CODES.usage);
+    expect(result.stderr).toContain('--target and --staged are mutually exclusive');
   });
 });
 

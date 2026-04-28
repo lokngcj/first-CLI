@@ -4,17 +4,23 @@
   "description": "CLI workflow tool for frontend Monorepo with apps/* structure — context generation, rule verification, fix suggestions, rules health check, and Figma bitmap compression",
   "type": "module",
   "main": "./dist/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "bin": {
     "atai-ai": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "docs",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pack:dry-run": "npm pack --dry-run"
   },
   "dependencies": {
     "chalk": "^5.3.0",
